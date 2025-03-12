@@ -1,7 +1,29 @@
-import 'package:flutter/material.dart';
+import 'HardCodes.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+
+
+// void main() {
+//   runApp(SpeakNinjaApp());
+// }
+//
+// class SpeakNinjaApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'SpeakNinja',
+//       debugShowCheckedModeBanner: false,
+//       theme: ThemeData(
+//         primarySwatch: Colors.blue,
+//       ),
+//       home: SpeakNinjaScreen(),
+//     );
+//   }
+// }
 
 class SpeakNinjaScreen extends StatefulWidget {
   @override
@@ -15,12 +37,8 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
 
-  final List<String> _hardcodedResponses = [
-    "Welcome to SpeakNinja! How can I help?",
-    "I'm here to assist you! What's on your mind?",
-    "Let me know what you need!",
-    "SpeakNinja at your service! How can I assist?"
-  ];
+  // Replace with your actual Gemini API key.
+  static String apiKey = hardcodes.gemeniekey;
 
   @override
   void dispose() {
@@ -29,7 +47,8 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
     super.dispose();
   }
 
-  void _sendMessage() {
+  /// Sends the user message and retrieves the AI coach's reply.
+  void _sendMessage() async {
     String text = _textController.text.trim();
     if (text.isEmpty) return;
 
@@ -38,17 +57,54 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
     });
     _textController.clear();
 
-    String response = _getBotResponse();
-    setState(() {
-      _messages.add(ChatMessage(text: response, isUser: false));
-    });
-    _speak(response);
+    String? response = await _getBotResponse(text);
+    if (response != null) {
+      setState(() {
+        _messages.add(ChatMessage(text: response, isUser: false));
+      });
+      _speak(response);
+    }
   }
 
-  String _getBotResponse() {
-    return _hardcodedResponses[_messages.length % _hardcodedResponses.length];
+  /// Calls the Gemini API to get a response.
+  Future<String?> _getBotResponse(String message) async {
+    String apiUrl =
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey";
+    String prompt = hardcodes.BasePrompt;
+    String fullPrompt = "$prompt  $message";
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {"text": fullPrompt}
+              ]
+            }
+          ]
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print(fullPrompt);
+        final data = jsonDecode(response.body);
+        if (data["candidates"] != null && data["candidates"].isNotEmpty) {
+          return data["candidates"][0]["content"]["parts"][0]["text"];
+        } else {
+          return "No response from the API.";
+        }
+      } else {
+        return "Error: ${response.statusCode}";
+      }
+    } catch (e) {
+      return "Error: $e";
+    }
   }
 
+  /// Starts voice recognition.
   void _startListening() async {
     bool available = await _speech.initialize(
       onStatus: (status) => print("Speech status: $status"),
@@ -72,17 +128,20 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
     }
   }
 
+  /// Stops voice recognition.
   void _stopListening() async {
     await _speech.stop();
     setState(() => _isListening = false);
   }
 
+  /// Uses text-to-speech to speak the response.
   void _speak(String text) async {
     await _flutterTts.setLanguage("en-US");
     await _flutterTts.setPitch(1.0);
     await _flutterTts.speak(text);
   }
 
+  /// Builds a chat message bubble.
   Widget _buildMessage(ChatMessage message) {
     bool isUser = message.isUser;
     return Container(
@@ -92,35 +151,40 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.75,
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              decoration: BoxDecoration(
-                color:
-                    isUser ? const Color(0xFF2EC4B6) : const Color(0xFF00A676),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black45,
-                    blurRadius: 4,
-                    offset: const Offset(2, 2),
-                  ),
-                ],
+          // Message Bubble
+          Flexible(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
               ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 20,
-                  color: Color(0xFFF6F7F8),
-                  fontWeight: FontWeight.w500,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: isUser ? const Color(0xFF2EC4B6) : const Color(0xFF00A676),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black45,
+                      blurRadius: 4,
+                      offset: const Offset(2, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  message.text,
+                  style: const TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 20,
+                    color: Color(0xFFF6F7F8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  softWrap: true,
+                  overflow: TextOverflow.visible,
                 ),
               ),
             ),
           ),
+          // Speaker Bubble (only for bot messages)
           if (!isUser)
             Padding(
               padding: const EdgeInsets.only(left: 8),
@@ -139,9 +203,7 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.volume_up, color: Colors.white),
-                  onPressed: () {
-                    _speak(message.text);
-                  },
+                  onPressed: () => _speak(message.text),
                   iconSize: 24,
                 ),
               ),
@@ -155,7 +217,7 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFB2D3A8),
+      backgroundColor: const Color(0xFFB2D3A8),
       appBar: AppBar(
         title: const Text(
           "🥷 SpeakNinjaAI",
@@ -172,84 +234,75 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
                 child: ListView.builder(
                   padding: const EdgeInsets.only(top: 10, bottom: 10),
                   itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    return _buildMessage(_messages[index]);
-                  },
+                  itemBuilder: (context, index) => _buildMessage(_messages[index]),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 0),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFB2D3A8),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      topRight: Radius.circular(10),
-                    ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFB2D3A8),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    // Align input to the bottom
-                    children: [
-                      IconButton(
-                        iconSize: 30,
-                        icon: Icon(
-                          _isListening
-                              ? CupertinoIcons.mic_fill
-                              : CupertinoIcons.mic,
-                          color: Color(0xFF1D7874),
-                        ),
-                        onPressed: () {
-                          if (!_isListening) {
-                            _startListening();
-                          } else {
-                            _stopListening();
-                          }
-                        },
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      iconSize: 30,
+                      icon: Icon(
+                        _isListening
+                            ? CupertinoIcons.mic_fill
+                            : CupertinoIcons.mic,
+                        color: const Color(0xFF1D7874),
                       ),
-                      Expanded(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxHeight:
-                                150, // Maximum height threshold for expansion
-                          ),
+                      onPressed: () {
+                        if (!_isListening) {
+                          _startListening();
+                        } else {
+                          _stopListening();
+                        }
+                      },
+                    ),
+                    Expanded(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 150),
+                        child: SingleChildScrollView(
                           child: TextField(
-                            cursorColor: Color(0xFF011627),
+                            cursorColor: const Color(0xFF011627),
                             cursorWidth: 3.0,
                             controller: _textController,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 20,
                               color: Color(0xFF011627),
                               fontWeight: FontWeight.w500,
                               fontFamily: 'Roboto',
                             ),
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               hintText: "Type your message or speak...",
                               hintStyle: TextStyle(
-                                fontSize: 17,
+                                fontSize: 20,
                                 color: Color(0xFF011627),
                                 fontWeight: FontWeight.w500,
                               ),
                               border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
+                              contentPadding: EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
                             ),
                             minLines: 1,
-                            // Starts with 1 line
                             maxLines: 5,
-                            // Expands up to 5 lines before scrolling
                             keyboardType: TextInputType.multiline,
                           ),
                         ),
                       ),
-                      IconButton(
-                        iconSize: 30,
-                        icon: const Icon(Icons.send, color: Color(0xFF1D7874)),
-                        onPressed: _sendMessage,
-                      ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      iconSize: 30,
+                      icon: const Icon(Icons.send, color: Color(0xFF1D7874)),
+                      onPressed: _sendMessage,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -260,6 +313,7 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
   }
 }
 
+/// Model class for a chat message.
 class ChatMessage {
   final String text;
   final bool isUser;

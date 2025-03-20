@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import './time.dart';
 
 class InterestSelectionPage extends StatefulWidget {
   @override
@@ -108,7 +109,14 @@ class _InterestSelectionPageState extends State<InterestSelectionPage> {
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 ),
-                onPressed: selectedInterests.length >= 3 ? () {} : null,
+                onPressed: selectedInterests.length >= 3
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const Time()),
+                        );
+                      }
+                    : null,
                 child: Text("Next", style: TextStyle(color: Colors.white)),
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'components/level_selection.dart';
 import 'reason.dart';
+import 'level_questionnaire.dart'; // Import the new screen
 
 class LevelSelectionScreen extends StatefulWidget {
   @override
@@ -10,16 +11,25 @@ class LevelSelectionScreen extends StatefulWidget {
 
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   final List<String> levels = [
-    "1 - Beginner",
-    "2 - Intermediate",
-    "3 - Advanced"
+    "Beginner",
+    "Intermediate",
+    "Advanced",
+    "Know your Level"
   ]; // Language options
 
   void _handleLevelSelection(String level) {
+    Widget nextScreen;
+
+    if (level == "Know your Level") {
+      nextScreen = KnowYourLevelScreen(); // Navigate to a different page
+    } else {
+      nextScreen = ReasonSelectionScreen(); // Default page
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ReasonSelectionScreen(), // Pass name
+        builder: (context) => nextScreen,
       ),
     );
   }
@@ -44,7 +54,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("On the scale of 1-3",
+                Text("So your level based on",
                     style: TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.w500,

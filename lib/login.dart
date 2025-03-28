@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         TextFormField(
-                          cursorColor: Colors.white,
+                          cursorColor: Color(0xFFf49549),
                           controller: _emailController,
                           style: TextStyle(
                             color: Colors.black,
@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         TextFormField(
-                          cursorColor: Colors.white,
+                          cursorColor: Color(0xFFf49549),
                           controller: _passwordController,
                           obscureText: true,
                           style: TextStyle(color: Colors.black),
@@ -180,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         SizedBox(height: 30),
-                        Text("Or Signup",
+                        Text("Or",
                             style: TextStyle(
                               color: Colors.black45,
                               fontSize: 20,

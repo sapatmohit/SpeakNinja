@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'signup.dart';
-import 'chatbot.dart';
 import 'username.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,21 +13,59 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool isLoading = false;
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => UsernameScreen()),
-      );
+      setState(() {
+        isLoading = true;
+      });
+      try {
+        String email = _emailController.text.trim();
+        String password = _passwordController.text.trim();
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => UsernameScreen()),
+        );
+      } on FirebaseAuthException catch (e) {
+        String message;
+        if (e.code == 'user-not-found') {
+          message = 'No user found for that email.';
+        } else if (e.code == 'wrong-password') {
+          message = 'Wrong password provided.';
+        } else {
+          message = 'An error occurred. Please try again.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An unexpected error occurred. Please try again.')),
+        );
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Color(0xFF041B1B),
-      backgroundColor: Color(0xFFFFFAF7), // color for background
+      backgroundColor: Color(0xFFFFFAF7),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -35,14 +73,11 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
-                // Aligns to the top
                 crossAxisAlignment: CrossAxisAlignment.center,
-                // Centers horizontally
                 children: [
                   Text(
                     "Login",
                     style: TextStyle(
-                      // color: Color(0xFFefefef),
                       color: Color(0xFF041B1B),
                       fontSize: 45,
                       fontWeight: FontWeight.bold,
@@ -66,9 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           cursorColor: Color(0xFFf49549),
                           controller: _emailController,
-                          style: TextStyle(
-                            color: Colors.black,
-                          ),
+                          style: TextStyle(color: Colors.black),
                           decoration: InputDecoration(
                             hintText: "Enter your Email",
                             filled: true,
@@ -80,23 +113,20 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                  color: Color(0xFFf49549), width: 2),
+                              borderSide: BorderSide(color: Color(0xFFf49549), width: 2),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Color(0xFFf49549),
-                                // Ensure focused color matches
-                                width: 2,
-                              ),
+                              borderSide: BorderSide(color: Color(0xFFf49549), width: 2),
                             ),
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 16),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "Please enter your email";
+                            }
+                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                              return "Please enter a valid email";
                             }
                             return null;
                           },
@@ -128,19 +158,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                  color: Color(0xFFf49549), width: 2),
+                              borderSide: BorderSide(color: Color(0xFFf49549), width: 2),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Color(0xFFf49549),
-                                // Ensure focused color matches
-                                width: 2,
-                              ),
+                              borderSide: BorderSide(color: Color(0xFFf49549), width: 2),
                             ),
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 16),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -163,28 +187,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         SizedBox(height: 50),
                         ElevatedButton(
-                          onPressed: _login,
+                          onPressed: isLoading ? null : _login,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFFf49549),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 60, vertical: 15),
-                            textStyle: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                            padding: EdgeInsets.symmetric(horizontal: 60, vertical: 15),
+                            textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(50),
                             ),
                           ),
-                          child: Text(
+                          child: isLoading
+                              ? CircularProgressIndicator(color: Colors.white)
+                              : Text(
                             "LOGIN",
                             style: TextStyle(color: Colors.white, fontSize: 22),
                           ),
                         ),
                         SizedBox(height: 30),
-                        Text("Or",
-                            style: TextStyle(
-                              color: Colors.black45,
-                              fontSize: 20,
-                            )),
+                        Text(
+                          "Or Signup",
+                          style: TextStyle(color: Colors.black45, fontSize: 20),
+                        ),
                         SizedBox(height: 30),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -195,8 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                               style: OutlinedButton.styleFrom(
                                 shape: CircleBorder(),
-                                side: BorderSide(
-                                    color: Color(0xFFf49549), width: 2.5),
+                                side: BorderSide(color: Color(0xFFf49549), width: 2.5),
                                 padding: EdgeInsets.all(20),
                               ),
                               child: Icon(
@@ -208,12 +230,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             SizedBox(width: 30),
                             OutlinedButton(
                               onPressed: () {
-                                print("facebook Button Clicked");
+                                print("Facebook Button Clicked");
                               },
                               style: OutlinedButton.styleFrom(
                                 shape: CircleBorder(),
-                                side: BorderSide(
-                                    color: Color(0xFFf49549), width: 2.5),
+                                side: BorderSide(color: Color(0xFFf49549), width: 2.5),
                                 padding: EdgeInsets.all(20),
                               ),
                               child: Icon(
@@ -225,12 +246,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             SizedBox(width: 30),
                             OutlinedButton(
                               onPressed: () {
-                                print("email Button Clicked");
+                                print("Email Button Clicked");
                               },
                               style: OutlinedButton.styleFrom(
                                 shape: CircleBorder(),
-                                side: BorderSide(
-                                    color: Color(0xFFf49549), width: 2.5),
+                                side: BorderSide(color: Color(0xFFf49549), width: 2.5),
                                 padding: EdgeInsets.all(20),
                               ),
                               child: Icon(
@@ -243,24 +263,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         SizedBox(height: 30),
                         OutlinedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SignupScreen(),
-                                ),
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Color(0xFFf49549), width: 2.5),
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 30, vertical: 15),
-                            ),
-                            child: Text(
-                              "SIGN UP",
-                              style:
-                                  TextStyle(color: Color(0xFFf49549), fontSize: 15),
-                            )),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SignupScreen()),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Color(0xFFf49549), width: 2.5),
+                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                          ),
+                          child: Text(
+                            "SIGN UP",
+                            style: TextStyle(color: Color(0xFFf49549), fontSize: 15),
+                          ),
+                        ),
                       ],
                     ),
                   ),

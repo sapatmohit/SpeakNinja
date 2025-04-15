@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/home/ammaar/snap/flutter/common/flutter/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/home/ammaar/Android/Sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/home/ammaar/Documents/zzz HACKS\u0026PROJS/Ai coach for english /code/my-git-clone/SpeakNinja/android/app/.cxx/Debug/1d4r1t6x/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/home/ammaar/Android/Sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/home/ammaar/Documents/zzz HACKS\u0026PROJS/Ai coach for english /code/my-git-clone/SpeakNinja/android/app/.cxx/Debug/1d4r1t6x/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}

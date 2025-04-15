@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import './time.dart';
 
+import 'chatbot.dart';
+
 class InterestSelectionPage extends StatefulWidget {
   @override
   _InterestSelectionPageState createState() => _InterestSelectionPageState();

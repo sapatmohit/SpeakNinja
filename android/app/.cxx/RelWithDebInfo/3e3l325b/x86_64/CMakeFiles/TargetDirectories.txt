@@ -1,0 +1,2 @@
+/home/ammaar/Documents/zzz HACKS&PROJS/Ai coach for english /code/my-git-clone/SpeakNinja/android/app/.cxx/RelWithDebInfo/3e3l325b/x86_64/CMakeFiles/edit_cache.dir
+/home/ammaar/Documents/zzz HACKS&PROJS/Ai coach for english /code/my-git-clone/SpeakNinja/android/app/.cxx/RelWithDebInfo/3e3l325b/x86_64/CMakeFiles/rebuild_cache.dir

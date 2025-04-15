@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'login.dart'; // Import your login screen file
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+
+import 'login.dart';
 import 'profile_screen.dart';
-import 'components/age_selection.dart'; // Import the AgeSelection widget
+import 'components/age_selection.dart';
 
 class UsernameScreen extends StatefulWidget {
   @override
@@ -11,8 +14,23 @@ class UsernameScreen extends StatefulWidget {
 class _UsernameScreenState extends State<UsernameScreen> {
   final TextEditingController _nameController = TextEditingController();
 
-  void _goToNextScreen() {
+  void _goToNextScreen() async {
     if (_nameController.text.isNotEmpty) {
+      // Before proceeding, update the user's name in the Firebase Realtime Database.
+      // Make sure the user is authenticated; this example assumes the user is already logged in.
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Create or update the user's node with the name.
+        DatabaseReference userRef =
+        FirebaseDatabase.instance.ref("users/${user.uid}");
+        await userRef.update({
+          'name': _nameController.text,
+        }).catchError((error) {
+          print("Error updating name: $error");
+        });
+      }
+
+      // Navigate to the AgeSelectionScreen and pass the entered name.
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -70,7 +88,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                 focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFf49549), width: 3)),
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
             ),
             SizedBox(height: 50),
@@ -113,13 +131,28 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
     "35 - 44",
     "45 - 54",
     "55 or older"
-  ]; // Age ranges
+  ];
 
-  void _handleAgeSelection(String age) {
+  void _handleAgeSelection(String age) async {
+    // Update the user's record with the selected age.
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DatabaseReference userRef =
+      FirebaseDatabase.instance.ref("users/${user.uid}");
+      await userRef.update({
+        'age': age,
+      }).catchError((error) {
+        print("Error updating age: $error");
+      });
+    } else {
+      print("No authenticated user found; cannot update age.");
+    }
+
+    // Navigate to the next screen (ProfilePictureScreen, for example)
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ProfilePictureScreen(), // Pass name
+        builder: (context) => ProfilePictureScreen(),
       ),
     );
   }
@@ -134,7 +167,7 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
           onPressed: () => Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => UsernameScreen()),
-          ), // Fixed back navigation
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,

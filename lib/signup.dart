@@ -1,10 +1,10 @@
+import 'package:chatbot_final/username.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'login.dart'; // Assuming this is your login screen
-import 'login.dart';
-import 'username.dart';
+import 'login.dart'; // Import your login screen file
 
+// This screen performs sign up, pushes data to the Realtime Database and then navigates to a temporary profile screen.
 class SignupScreen extends StatefulWidget {
   @override
   _SignupScreenState createState() => _SignupScreenState();
@@ -12,48 +12,45 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController    = TextEditingController();
+  final TextEditingController _emailController   = TextEditingController();
+  final TextEditingController _passwordController= TextEditingController();
 
-  // Asynchronous signup function with Firebase Authentication and Realtime Database update
+  // Asynchronous signup function
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
       try {
         // Create a new user with email and password
         UserCredential userCredential = await FirebaseAuth.instance
             .createUserWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
 
         // Get the newly created user
         User? user = userCredential.user;
         if (user != null) {
-          // Update the user's display name with the provided name
-          await user.updateProfile(displayName: _nameController.text);
-          await user.reload(); // Ensure the local user object is updated
+          // Update the user's display name
+          await user.updateDisplayName(_nameController.text.trim());
 
-          // Write the user's data to the Realtime Database under a node with the user's UID
-          DatabaseReference userRef =
-          FirebaseDatabase.instance.ref("users/${user.uid}");
+          // Write the user's basic data to the Realtime Database under /users/<uid>
+          DatabaseReference userRef = FirebaseDatabase.instance.ref("users/${user.uid}");
           await userRef.set({
-            'name': _nameController.text,
-            'email': _emailController.text,
-            // Additional user data can be added here as needed.
+            'name': _nameController.text.trim(),
+            'email': _emailController.text.trim(),
+            // You can add additional fields as needed here.
           });
-        }
 
-        // Navigate to the temporary profile screen after successful sign-up
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => LoginScreen(),
-          ),
-        );
+          // Navigate to a temporary profile screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UsernameScreen(),
+            ),
+          );
+        }
       } on FirebaseAuthException catch (e) {
-        // Handle specific Firebase Authentication errors
-        String message;
+        String message = '';
         if (e.code == 'weak-password') {
           message = 'The password provided is too weak.';
         } else if (e.code == 'email-already-in-use') {
@@ -65,20 +62,10 @@ class _SignupScreenState extends State<SignupScreen> {
           SnackBar(content: Text(message)),
         );
       } catch (e) {
-        // Handle any other unexpected errors
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('An error occurred. Please try again.')),
         );
       }
-    }
-  }
-
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => UsernameScreen()),
-      );
     }
   }
 
@@ -87,10 +74,10 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       backgroundColor: Color(0xFFFFFAF7),
       appBar: AppBar(
-        title: Text("Sign Up", style: TextStyle(color: Color(0xFFf49549))),
+        title: Text("Sign Up", style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: Color(0xFFf49549)),
+        iconTheme: IconThemeData(color: Colors.black),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -99,31 +86,18 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Create an Account",
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF00598B),
-                ),
-              ),
               Text("Create an Account",
                   style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFf49549))),
+                      color: Color(0xFF00598B))),
               SizedBox(height: 20),
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: "Full Name",
-                  filled: true,
-                  // fillColor: Color(0xFFf49549),
-                  fillColor: Colors.white,
-                  hintStyle: TextStyle(color: Colors.black),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (value) =>
                 value!.isEmpty ? "Please enter your name" : null,
@@ -133,28 +107,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   hintText: "Email",
-                  filled: true,
-                  // fillColor: Color(0xFFf49549),
-                  fillColor: Colors.white,
-                  hintStyle: TextStyle(color: Colors.black),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                        color: Color(0xFFf49549), width: 2),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                      color: Color(0xFFf49549),
-                      // Ensure focused color matches
-                      width: 2,
-                    ),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 16),
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (value) =>
                 value!.contains('@') ? null : "Enter a valid email",
@@ -165,28 +119,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: "Password",
-                  filled: true,
-                  // fillColor: Color(0xFFf49549),
-                  fillColor: Colors.white,
-                  hintStyle: TextStyle(color: Colors.black),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                        color: Color(0xFFf49549), width: 2),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                      color: Color(0xFFf49549),
-                      // Ensure focused color matches
-                      width: 2,
-                    ),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 16),
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (value) => value!.length >= 6
                     ? null
@@ -195,18 +129,16 @@ class _SignupScreenState extends State<SignupScreen> {
               SizedBox(height: 30),
               Center(
                 child: ElevatedButton(
-                  onPressed: _login,
+                  onPressed: _signup,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFf49549),
+                    backgroundColor: Colors.black,
                     padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(50),
                     ),
                   ),
-                  child: Text(
-                    "Sign Up",
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
+                  child: Text("Sign Up",
+                      style: TextStyle(color: Colors.white, fontSize: 18)),
                 ),
               ),
               SizedBox(height: 20),
@@ -218,9 +150,9 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               SizedBox(height: 20),
               Center(
-                child: OutlinedButton(
+                  child: OutlinedButton(
                     onPressed: () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) => LoginScreen(),
@@ -228,32 +160,15 @@ class _SignupScreenState extends State<SignupScreen> {
                       );
                     },
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Color(0xFFf49549), width: 2.5),
-                      padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      side: BorderSide(color: Colors.black, width: 2.5),
+                      padding:
+                      EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                     ),
                     child: Text(
                       "Login",
-                      style: TextStyle(color: Color(0xFFf49549), fontSize: 20),
-                    )),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => LoginScreen(),
-                      ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.black, width: 2.5),
-                    padding:
-                    EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  ),
-                  child: Text(
-                    "Login",
-                    style: TextStyle(color: Colors.black, fontSize: 20),
-                  ),
-                ),
-              ),
+                      style: TextStyle(color: Colors.black, fontSize: 20),
+                    ),
+                  )),
             ],
           ),
         ),
@@ -262,17 +177,28 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 }
 
-// class TempProfileScreen extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     // Get the current authenticated user
-//     User? user = FirebaseAuth.instance.currentUser;
-//     // Use the display name from Firebase, default to "User" if null
-//     String displayName = user?.displayName ?? 'User';
-//     return Scaffold(
-//       body: Center(
-//         child: Text("Welcome, $displayName!"),
-//       ),
-//     );
-//   }
-// }
+// A temporary profile screen to display the user's name after sign-up.
+class TempProfileScreen extends StatelessWidget {
+  final String name;
+
+  TempProfileScreen({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Profile", style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
+      ),
+      backgroundColor: Color(0xFFFFFAF7),
+      body: Center(
+        child: Text(
+          "Welcome, $name!",
+          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+}

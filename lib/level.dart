@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'components/level_selection.dart';
 import 'reason.dart';
 import 'level_questionnaire.dart'; // Import the new screen
 
 class LevelSelectionScreen extends StatefulWidget {
   @override
-  _LevelSelectionScreenState createState() =>
-      _LevelSelectionScreenState();
+  _LevelSelectionScreenState createState() => _LevelSelectionScreenState();
 }
 
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
@@ -15,17 +16,42 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     "Intermediate",
     "Advanced",
     "Know your Level"
-  ]; // Language options
+  ]; // Level options
 
-  void _handleLevelSelection(String level) {
+  Future<void> _handleLevelSelection(String level) async {
+    // Retrieve the currently authenticated user
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        // Create a reference to the user's node in the Realtime Database
+        DatabaseReference userRef = FirebaseDatabase.instance.ref("users/${user.uid}");
+        // Update the user's record with the selected level
+        await userRef.update({
+          'level': level,
+        });
+      } catch (error) {
+        print("Error updating level: $error");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error updating level. Please try again.")),
+        );
+      }
+    } else {
+      print("No authenticated user found.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User not authenticated.")),
+      );
+      return;
+    }
+
+    // Determine the next screen based on the selected level
     Widget nextScreen;
-
     if (level == "Know your Level") {
       nextScreen = KnowYourLevelScreen(); // Navigate to a different page
     } else {
       nextScreen = ReasonSelectionScreen(); // Default page
     }
 
+    // Navigate to the next screen
     Navigator.push(
       context,
       MaterialPageRoute(

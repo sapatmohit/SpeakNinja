@@ -113,10 +113,10 @@ class _InterestSelectionPageState extends State<InterestSelectionPage> {
                 ),
                 onPressed: selectedInterests.length >= 3
                     ? () {
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(builder: (context) => const Time()),
-                        // );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const Time()),
+                        );
                       }
                     : null,
                 child: Text("Next", style: TextStyle(color: Colors.white)),

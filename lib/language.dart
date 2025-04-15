@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'components/language_selection.dart';
 import 'profile_screen.dart';
 import 'level.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   @override
-  _LanguageSelectionScreenState createState() =>
-      _LanguageSelectionScreenState();
+  _LanguageSelectionScreenState createState() => _LanguageSelectionScreenState();
 }
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
@@ -16,11 +17,38 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     "English"
   ]; // Language options
 
-  void _handleLanguageSelection(String language) {
+  // When a language is selected, update the corresponding user's record in Firebase Realtime Database
+  Future<void> _handleLanguageSelection(String language) async {
+    // Retrieve the currently authenticated user.
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        // Create a reference to the user's node in the Realtime Database.
+        DatabaseReference userRef = FirebaseDatabase.instance.ref("users/${user.uid}");
+        // Update the user's record with the selected language.
+        await userRef.update({
+          'language': language,
+        });
+      } catch (error) {
+        print("Error updating language: $error");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error updating language. Please try again.")),
+        );
+        return;
+      }
+    } else {
+      print("No authenticated user found.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User not authenticated.")),
+      );
+      return;
+    }
+
+    // After updating the language, navigate to the LevelSelectionScreen.
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LevelSelectionScreen(), // Pass name
+        builder: (context) => LevelSelectionScreen(),
       ),
     );
   }

@@ -177,28 +177,28 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 }
 
-// A temporary profile screen to display the user's name after sign-up.
-class TempProfileScreen extends StatelessWidget {
-  final String name;
-
-  TempProfileScreen({required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Profile", style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
-      ),
-      backgroundColor: Color(0xFFFFFAF7),
-      body: Center(
-        child: Text(
-          "Welcome, $name!",
-          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-}
+// // A temporary profile screen to display the user's name after sign-up.
+// class TempProfileScreen extends StatelessWidget {
+//   final String name;
+//
+//   TempProfileScreen({required this.name});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text("Profile", style: TextStyle(color: Colors.black)),
+//         backgroundColor: Colors.transparent,
+//         elevation: 0,
+//         iconTheme: IconThemeData(color: Colors.black),
+//       ),
+//       backgroundColor: Color(0xFFFFFAF7),
+//       body: Center(
+//         child: Text(
+//           "Welcome, $name!",
+//           style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+//         ),
+//       ),
+//     );
+//   }
+// }

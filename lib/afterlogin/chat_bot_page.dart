@@ -174,7 +174,7 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                 decoration: BoxDecoration(
-                  color: isUser ? Colors.blue[500] : Colors.blue[200],
+                  color: isUser ? Color(0xFF00598B) : Color(0xFFC7E8FF), // Different colors for user/bot
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -186,11 +186,11 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
                 ),
                 child: Text(
                   message.text,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Roboto',
                     fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
+                    color: isUser ? Colors.white : Color(0xFF00598B), // White for user, black for bot
+                    fontWeight: FontWeight.w500,
                   ),
                   softWrap: true,
                   overflow: TextOverflow.visible,
@@ -205,7 +205,7 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.blue[200],
+                  color: Colors.blue[400], // Color for speaker button
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
@@ -233,17 +233,21 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        centerTitle: true,
         title: const Text(
           "SpeakNinja AI",
           style: TextStyle(
             color: Colors.white,
             fontFamily: 'Roboto',
-            fontSize: 18,
+            fontSize: 23,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.blue[600],
+        backgroundColor: Color(0xFF00598B),
         elevation: 2,
+        iconTheme: IconThemeData(color: Colors.white),  // ← Change the arrow color here
       ),
+
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(color: Colors.grey[50]),
@@ -281,7 +285,7 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
                         _isListening
                             ? CupertinoIcons.mic_fill
                             : CupertinoIcons.mic,
-                        color: Colors.black87,
+                        color: Color(0xFF00598B),
                       ),
                       onPressed: () {
                         if (!_isListening) {
@@ -326,7 +330,7 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
                     ),
                     IconButton(
                       iconSize: 28,
-                      icon: const Icon(Icons.send, color: Colors.black87),
+                      icon: const Icon(Icons.send, color: Color(0xFF00598B)),
                       onPressed: _sendMessage,
                     ),
                   ],

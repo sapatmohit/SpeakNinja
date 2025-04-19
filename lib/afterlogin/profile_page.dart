@@ -23,206 +23,228 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     super.dispose();
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.indigo[800]),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Profile',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.indigo[800],
-          ),
-          textAlign: TextAlign.center,
-        ),
-        backgroundColor: Colors.white,
-        centerTitle: true,
-      ),
-      body: Column(
+      backgroundColor: Colors.white, // Set a solid background color
+      // appBar: AppBar(
+      //   leading: IconButton(
+      //     icon: Icon(Icons.arrow_back, color: Color(0xFF00598B)),
+      //     onPressed: () => Navigator.pop(context),
+      //   ),
+      //   title: Text(
+      //     'Profile',
+      //     style: TextStyle(
+      //       fontSize: 22,
+      //       fontWeight: FontWeight.bold,
+      //       color: Colors.black,
+      //     ),
+      //   ),
+      //   backgroundColor: Color(0xFFC7E8FF),
+      //   centerTitle: true,
+      //   elevation: 0,
+      // ),
+      body: Stack(
         children: [
-          // User Info (top area with curved edges)
-          ClipPath(
-            clipper: CustomCurvedClipper(),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20),
-              color: Colors.indigo[700],
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.indigo[600],
-                    child: Icon(
-                      Icons.person,
-                      size: 50,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Rahul Naam Tu Suna Hoga',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    'Username: @johndoe123',
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    'Joined: April 16, 2025',
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
-                ],
+          // Wave Image Background (moved to bottom with controlled overlap)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: 300, // Adjust this value to control the wave height
+              child: Image.asset(
+                'assets/wave.png',
+                fit: BoxFit.fill, // Ensures it stretches horizontally and vertically to the SizedBox
+                alignment: Alignment.bottomCenter,
               ),
             ),
           ),
 
-          // Tabs
+          // Main Content with solid background
           Container(
-            color: Colors.grey[200],
-            child: TabBar(
-              controller: _tabController,
-              labelColor: Colors.indigo[800],
-              unselectedLabelColor: Colors.grey[600],
-              indicatorColor: Colors.indigo[800],
-              tabs: [
-                Tab(text: 'Personal Info'),
-                Tab(text: 'Overview'),
-                Tab(text: 'Goals'),
-              ],
-            ),
-          ),
+            color: Colors.transparent,// Ensures wave doesn’t bleed through
+            child: Column(
+              children: [
 
-          // Tab Views
-          Expanded(
-            child: Container(
-              color: Colors.grey[100],
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildPersonalInfo(),
-                  _buildOverview(),
-                  _buildGoals(),
-                ],
-              ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 33.0, bottom: 18.0),
+                  child: Container(
+                    // margin: const EdgeInsets.only(top: 0.0, bottom: 18.0),
+                    width: double.infinity,
+                    height: 170,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC7E8FF),
+                      // borderRadius: BorderRadius.circular(16), // rounds all 4 corners
+                      // // If you only want the bottom corners rounded, use:
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(56),
+                        bottomRight: Radius.circular(56),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Profile Circle
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.black,
+                          child: const Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Color(0xFFC7E8FF),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        // User Details
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Text(
+                                'Rahul Kumar',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF00598B),
+                                ),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'Username: @johndoe123',
+                                style: TextStyle(color: Colors.blueGrey, fontSize: 16),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'Joined: April 16, 2025',
+                                style: TextStyle(color:  Colors.blueGrey, fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Tabs
+                Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFFC7E8FF), // Background color for whole tab bar
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Color(0xFF00598B),
+                    indicator: BoxDecoration(
+                      color: Color(0xFF00598B), // Background for selected tab
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    labelStyle: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
+                    unselectedLabelStyle: TextStyle(fontSize: 14.0,fontWeight: FontWeight.bold ),
+                    tabs: [
+                      Tab(text: ' Personal Info '),
+                      Tab(text: '    Overview   '),
+                      Tab(text: '     Goals     '),
+                    ],
+                  ),
+                )
+,
+                // Tab Views
+                Expanded(
+                  child: Container(
+                    color: Colors.transparent, // Ensures consistent background
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildPersonalInfo(),
+                        _buildOverview(),
+                        _buildGoals(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-
   Widget _buildPersonalInfo() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: EdgeInsets.only(bottom: 16.0),
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.indigo[50],
-              borderRadius: BorderRadius.circular(38),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'About Me',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[800],
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Enthusiastic learner with a passion for AI and technology.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                ),
-              ],
+          _buildInfoCard(
+            title: 'About Me',
+            content: Text(
+              'Enthusiastic learner with a passion for AI and technology.',
+              style: TextStyle(fontSize: 16, color: Color(0xFF374151)),
             ),
           ),
-          Container(
-            margin: EdgeInsets.only(bottom: 16.0),
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.indigo[50],
-              borderRadius: BorderRadius.circular(38),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          _buildInfoCard(
+            title: 'Contact Info',
+            content: Column(
               children: [
-                Text(
-                  'Contact Info',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[800],
-                  ),
-                ),
-                SizedBox(height: 8),
                 ListTile(
-                  leading: Icon(Icons.email, color: Colors.indigo[600]),
-                  title: Text('john.doe@example.com', style: TextStyle(color: Colors.grey[700])),
+                  leading: Icon(Icons.email, color: Color(0xFF00598B)),
+                  title: Text('john.doe@example.com', style: TextStyle(color: Color(0xFF374151))),
                 ),
                 ListTile(
-                  leading: Icon(Icons.location_on, color: Colors.indigo[600]),
-                  title: Text('123 Tech Street, AI City', style: TextStyle(color: Colors.grey[700])),
+                  leading: Icon(Icons.location_on, color: Color(0xFF00598B)),
+                  title: Text('123 Tech Street, AI City', style: TextStyle(color: Color(0xFF374151))),
                 ),
               ],
             ),
           ),
-          Container(
-            margin: EdgeInsets.only(bottom: 16.0),
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.indigo[50],
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-            ),
-            child: Column(
+          _buildInfoCard(
+            title: 'Additional Details',
+            content: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Additional Details',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[800],
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Age: 28',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                ),
+                Text('Age: 28', style: TextStyle(fontSize: 16, color: Color(0xFF374151))),
                 SizedBox(height: 4),
-                Text(
-                  'Occupation: Software Developer',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                ),
+                Text('Occupation: Software Developer', style: TextStyle(fontSize: 16, color: Color(0xFF374151))),
                 SizedBox(height: 4),
-                Text(
-                  'Interests: AI, Coding, Reading',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                ),
+                Text('Interests: AI, Coding, Reading', style: TextStyle(fontSize: 16, color: Color(0xFF374151))),
               ],
             ),
           ),
+          SizedBox(height: 100), // Space for wave
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({required String title, required Widget content}) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.0),
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Color(0xFFC7E8FF).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF00598B),
+            ),
+          ),
+          SizedBox(height: 8),
+          content,
         ],
       ),
     );
@@ -239,10 +261,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.indigo[800],
+              color: Color(0xFF00598B),
             ),
           ),
-          SizedBox(height: 12),
+
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -256,27 +278,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               _buildStatCard('XP Count', '1200', Icons.star),
             ],
           ),
-          SizedBox(height: 20),
-          Text(
-            'Badges',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.indigo[800],
-            ),
-          ),
-          SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildAchievementCard('Achievement 1', Icons.circle),
-                _buildAchievementCard('Achievement 2', Icons.circle),
-                _buildAchievementCard('Achievement 3', Icons.circle),
-                _buildAchievementCard('Achievement 4', Icons.circle),
-              ],
-            ),
-          ),
+          SizedBox(height: 100), // Space for wave
         ],
       ),
     );
@@ -284,23 +286,21 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
   Widget _buildStatCard(String title, String value, IconData icon) {
     return Card(
-      color: Colors.indigo[800],
+      color: Color(0xFF00598B).withOpacity(0.8),
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 30, color: Colors.white),
+            Icon(icon, size: 30, color: Color(0xFFC7E8FF)),
             SizedBox(height: 8),
             Text(
               title,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white,
+                color: Color(0xFFC7E8FF),
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -310,39 +310,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               value,
               style: TextStyle(
                 fontSize: 20,
-                color: Colors.white,
+                color: Color(0xFFC7E8FF),
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAchievementCard(String name, IconData icon) {
-    return Card(
-      color: Colors.indigo[800],
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      margin: EdgeInsets.only(right: 10),
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              name,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
             ),
           ],
         ),
@@ -356,28 +327,12 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: EdgeInsets.only(bottom: 16.0),
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.indigo[50],
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          _buildInfoCard(
+            title: 'Set Your Goals',
+            content: Column(
               children: [
-                Text(
-                  'Set Your Goals',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[800],
-                  ),
-                ),
-                SizedBox(height: 8),
                 ListTile(
-                  leading: Icon(Icons.flag, color: Colors.indigo[600]),
+                  leading: Icon(Icons.flag, color: Color(0xFF00598B)),
                   title: DropdownButton<String>(
                     value: _selectedGoal,
                     isExpanded: true,
@@ -395,7 +350,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                   ),
                 ),
                 ListTile(
-                  leading: Icon(Icons.description, color: Colors.indigo[600]),
+                  leading: Icon(Icons.description, color: Color(0xFF00598B)),
                   title: TextField(
                     decoration: InputDecoration(
                       hintText: 'Goal Description',
@@ -406,29 +361,13 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               ],
             ),
           ),
-          Container(
-            margin: EdgeInsets.only(bottom: 16.0),
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.indigo[50],
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          _buildInfoCard(
+            title: 'Reminder Settings',
+            content: Column(
               children: [
-                Text(
-                  'Reminder Settings',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[800],
-                  ),
-                ),
-                SizedBox(height: 8),
                 SwitchListTile(
-                  secondary: Icon(Icons.notifications, color: Colors.indigo[600]),
-                  title: Text('Enable Reminders', style: TextStyle(color: Colors.grey[700])),
+                  secondary: Icon(Icons.notifications, color: Color(0xFF00598B)),
+                  title: Text('Enable Reminders', style: TextStyle(color: Color(0xFF374151))),
                   value: _reminderEnabled,
                   onChanged: (value) {
                     setState(() {
@@ -437,10 +376,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.access_time, color: Colors.indigo[600]),
+                  leading: Icon(Icons.access_time, color: Color(0xFF00598B)),
                   title: Text(
                     'Reminder Time: ${_reminderTime.format(context)}',
-                    style: TextStyle(color: Colors.grey[700]),
+                    style: TextStyle(color: Color(0xFF374151)),
                   ),
                   onTap: () async {
                     final selectedTime = await showTimePicker(
@@ -455,7 +394,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.repeat, color: Colors.indigo[600]),
+                  leading: Icon(Icons.repeat, color: Color(0xFF00598B)),
                   title: DropdownButton<String>(
                     value: 'Daily',
                     isExpanded: true,
@@ -472,52 +411,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               ],
             ),
           ),
+          SizedBox(height: 100), // Space for wave
         ],
       ),
     );
   }
-}
-
-// Custom clipper for curved edges
-class CustomCurvedClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    final curveHeight = 65.0; // Height of the curve
-    final curveWidth = 90.0;  // Width of the curve at each end
-
-    // Start at top-left
-    path.moveTo(0, 0);
-
-    // Top edge
-    path.lineTo(size.width, 0);
-
-    // Right curve (bottom-right corner)
-    path.lineTo(size.width, size.height - curveHeight);
-    path.quadraticBezierTo(
-      size.width,
-      size.height,
-      size.width - curveWidth,
-      size.height,
-    );
-
-    // Bottom edge with curve
-    path.lineTo(curveWidth, size.height);
-
-    // Left curve (bottom-left corner)
-    path.quadraticBezierTo(
-      0,
-      size.height,
-      0,
-      size.height - curveHeight,
-    );
-
-    // Back to start
-    path.close();
-
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

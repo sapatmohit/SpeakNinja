@@ -44,7 +44,7 @@ class _SpeakNinjaScreenState extends State<SpeakNinjaScreen> {
     super.initState();
     // Add default bot message
     _messages.add(ChatMessage(
-      text: "How can I help you? Rahul",
+      text: "How can I help you? Learner",
       isUser: false,
     ));
     // Request focus to show keyboard when screen opens

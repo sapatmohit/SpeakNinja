@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:shared_preferences/shared_preferences.dart';    // ← Add this
+
 import 'chat_bot_page.dart';
 import 'profile_page.dart';
 import 'text_selection.dart';
@@ -57,6 +59,10 @@ class RoadmapPage extends StatefulWidget {
 
 class _RoadmapPageState extends State<RoadmapPage> {
   final ScrollController _scrollController = ScrollController();
+
+  // NEW: holds the loaded username
+  String _username = 'Learner';
+
   late List<LevelItem> allLevels;
   int _currentSection = 1;
 
@@ -82,14 +88,19 @@ class _RoadmapPageState extends State<RoadmapPage> {
   @override
   void initState() {
     super.initState();
+    _loadUsername();      // ← Load it here
     final random = Random();
     allLevels = List.generate(100, (i) {
       if (i < 5) {
         final lessonType = random.nextBool() ? "TextSelection" : "AudioRecognition";
         return LevelItem(
           title: "Lesson ${i + 1}: ${lessonType == 'TextSelection' ? 'Text Selection' : 'Audio Recognition'} - Word ${i + 1}",
-          description: lessonType == "TextSelection" ? "Select the correct meaning of the word" : "Identify the meaning from audio",
-          icon: lessonType == "TextSelection" ? textIcons[0] : audioIcons[random.nextInt(audioIcons.length)],
+          description: lessonType == "TextSelection"
+              ? "Select the correct meaning of the word"
+              : "Identify the meaning from audio",
+          icon: lessonType == "TextSelection"
+              ? textIcons[0]
+              : audioIcons[random.nextInt(audioIcons.length)],
           lessonType: lessonType,
         );
       } else {
@@ -101,6 +112,7 @@ class _RoadmapPageState extends State<RoadmapPage> {
         );
       }
     });
+
     _scrollController.addListener(() {
       double itemHeight = 88 + 28;
       int visibleIndex = (_scrollController.offset / itemHeight).floor();
@@ -109,6 +121,16 @@ class _RoadmapPageState extends State<RoadmapPage> {
       if (_currentSection != newSection) {
         setState(() => _currentSection = newSection);
       }
+    });
+  }
+
+  // NEW: Fetch username from SharedPreferences
+  Future<void> _loadUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('username');
+    print("-------------------------------------------📥 Loaded username: $name");
+    setState(() {
+      _username = name!;
     });
   }
 
@@ -122,17 +144,15 @@ class _RoadmapPageState extends State<RoadmapPage> {
         preferredSize: const Size.fromHeight(70),
         child: AppBar(
           backgroundColor: const Color(0xFF00598B),
-          // Optional: set exact toolbar height
           toolbarHeight: 70,
-
-          // Everything lives in this Row:
           title: Row(
             children: [
-              // 1) Welcome text
+              // UPDATED: show dynamic username
               AnimatedTextKit(
+                key: ValueKey(_username),        // ← force rebuild when username changes
                 animatedTexts: [
                   TypewriterAnimatedText(
-                    'Welcome, Rahul',
+                    'Welcome, $_username',
                     textStyle: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -145,9 +165,8 @@ class _RoadmapPageState extends State<RoadmapPage> {
                 isRepeatingAnimation: false,
               ),
 
-              Spacer(), // pushes the dropdown+avatar to the right
+              const Spacer(),
 
-              // 2) Flag dropdown
               DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: '🇺🇸',
@@ -165,7 +184,6 @@ class _RoadmapPageState extends State<RoadmapPage> {
               ),
               const SizedBox(width: 12),
 
-              // 3) Profile icon
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
@@ -181,8 +199,6 @@ class _RoadmapPageState extends State<RoadmapPage> {
           ),
         ),
       ),
-
-
 
 
       body: Stack(

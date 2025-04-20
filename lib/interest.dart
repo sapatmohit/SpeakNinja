@@ -1,3 +1,4 @@
+import 'package:chatbot_final/afterlogin/roadmap.dart';
 import 'package:flutter/material.dart';
 import './time.dart';
 
@@ -115,7 +116,7 @@ class _InterestSelectionPageState extends State<InterestSelectionPage> {
                     ? () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const Time()),
+                          MaterialPageRoute(builder: (context) => const RoadmapPage()),
                         );
                       }
                     : null,

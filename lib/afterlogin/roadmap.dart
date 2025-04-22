@@ -1,11 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
-import 'package:shared_preferences/shared_preferences.dart';    // ← Add this
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'chat_bot_page.dart';
 import 'profile_page.dart';
-import 'text_selection.dart';
+import 'text_selection.dart'; // Ensure this points to the correct file
 import 'audio_recognition.dart';
 import 'managing.dart';
 
@@ -29,7 +28,8 @@ class MyApp extends StatelessWidget {
       ),
       home: const RoadmapPage(),
       routes: {
-        '/textSelection': (context) => const TextSelectionLesson(),
+        '/textSelection': (context) =>
+            TextSelectionLesson(lessonNumber: 1), // Fixed constructor
         '/audioRecognition': (context) => const AudioRecognitionLesson(),
       },
       debugShowCheckedModeBanner: false,
@@ -42,12 +42,14 @@ class LevelItem {
   final String description;
   final IconData icon;
   final String lessonType;
+  final int lessonNumber;
 
   LevelItem({
     required this.title,
     required this.description,
     required this.icon,
     required this.lessonType,
+    this.lessonNumber = 1,
   });
 }
 
@@ -59,10 +61,7 @@ class RoadmapPage extends StatefulWidget {
 
 class _RoadmapPageState extends State<RoadmapPage> {
   final ScrollController _scrollController = ScrollController();
-
-  // NEW: holds the loaded username
   String _username = 'Learner';
-
   late List<LevelItem> allLevels;
   int _currentSection = 1;
 
@@ -88,20 +87,23 @@ class _RoadmapPageState extends State<RoadmapPage> {
   @override
   void initState() {
     super.initState();
-    _loadUsername();      // ← Load it here
+    _loadUsername();
     final random = Random();
     allLevels = List.generate(100, (i) {
       if (i < 5) {
-        final lessonType = random.nextBool() ? "TextSelection" : "AudioRecognition";
+        final lessonType =
+            random.nextBool() ? "TextSelection" : "AudioRecognition";
         return LevelItem(
-          title: "Lesson ${i + 1}: ${lessonType == 'TextSelection' ? 'Text Selection' : 'Audio Recognition'} - Word ${i + 1}",
+          title:
+              "Lesson ${i + 1}: ${lessonType == 'TextSelection' ? 'Text Selection' : 'Audio Recognition'} - Word ${i + 1}",
           description: lessonType == "TextSelection"
-              ? "Select the correct meaning of the word"
+              ? "Complete 3 unique translation questions"
               : "Identify the meaning from audio",
           icon: lessonType == "TextSelection"
               ? textIcons[0]
               : audioIcons[random.nextInt(audioIcons.length)],
           lessonType: lessonType,
+          lessonNumber: i + 1,
         );
       } else {
         return LevelItem(
@@ -117,27 +119,25 @@ class _RoadmapPageState extends State<RoadmapPage> {
       double itemHeight = 88 + 28;
       int visibleIndex = (_scrollController.offset / itemHeight).floor();
       int newSection = (visibleIndex ~/ 6) + 1;
-
       if (_currentSection != newSection) {
         setState(() => _currentSection = newSection);
       }
     });
   }
 
-  // NEW: Fetch username from SharedPreferences
   Future<void> _loadUsername() async {
     final prefs = await SharedPreferences.getInstance();
     final name = prefs.getString('username');
-    print("-------------------------------------------📥 Loaded username: $name");
+    print(
+        "-------------------------------------------📥 Loaded username: $name");
     setState(() {
-      _username = name!;
+      _username = name ?? 'Learner';
     });
   }
 
   @override
   Widget build(BuildContext context) {
     double circleRadius = 44;
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -147,60 +147,56 @@ class _RoadmapPageState extends State<RoadmapPage> {
           toolbarHeight: 70,
           title: Row(
             children: [
-              // UPDATED: show dynamic username
               AnimatedTextKit(
-                key: ValueKey(_username),        // ← force rebuild when username changes
+                key: ValueKey(_username),
                 animatedTexts: [
                   TypewriterAnimatedText(
                     'Welcome, $_username',
                     textStyle: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontFamily: 'Roboto',
-                    ),
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'Roboto'),
                     speed: const Duration(milliseconds: 180),
                   ),
                 ],
                 isRepeatingAnimation: false,
               ),
-
               const Spacer(),
-
               DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: '🇺🇸',
-                  icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+                  icon: const Icon(Icons.arrow_drop_down,
+                      color: Colors.white, size: 20),
                   dropdownColor: const Color(0xFF00598B),
                   items: const [
-                    DropdownMenuItem(value: '🇺🇸', child: Text('🇺🇸', style: TextStyle(fontSize: 18))),
-                    DropdownMenuItem(value: '🇮🇳', child: Text('🇮🇳', style: TextStyle(fontSize: 18))),
-                    DropdownMenuItem(value: '🇲🇾', child: Text('🇲🇾', style: TextStyle(fontSize: 18))),
+                    DropdownMenuItem(
+                        value: '🇺🇸',
+                        child: Text('🇺🇸', style: TextStyle(fontSize: 18))),
+                    DropdownMenuItem(
+                        value: '🇮🇳',
+                        child: Text('🇮🇳', style: TextStyle(fontSize: 18))),
+                    DropdownMenuItem(
+                        value: '🇲🇾',
+                        child: Text('🇲🇾', style: TextStyle(fontSize: 18))),
                   ],
-                  onChanged: (value) {
-                    // handle language change
-                  },
+                  onChanged: (value) {},
                 ),
               ),
               const SizedBox(width: 12),
-
               GestureDetector(
                 onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ProfilePage()),
-                ),
+                    context, MaterialPageRoute(builder: (_) => ProfilePage())),
                 child: const CircleAvatar(
-                  radius: 22,
-                  backgroundColor: Color(0xFFC7E8FF),
-                  child: Icon(Icons.person, color: Color(0xFF00598B), size: 26),
-                ),
+                    radius: 22,
+                    backgroundColor: Color(0xFFC7E8FF),
+                    child:
+                        Icon(Icons.person, color: Color(0xFF00598B), size: 26)),
               ),
             ],
           ),
         ),
       ),
-
-
       body: Stack(
         children: [
           Positioned.fill(
@@ -208,46 +204,51 @@ class _RoadmapPageState extends State<RoadmapPage> {
             child: IgnorePointer(
               child: CustomPaint(
                 painter: _GlobalLinePainter(
-                  circleRadius: circleRadius,
-                  itemCount: allLevels.length,
-                  itemHeight: 100,
-                  lineColor: const Color(0xFF00598B).withOpacity(0.5),
-                ),
+                    circleRadius: circleRadius,
+                    itemCount: allLevels.length,
+                    itemHeight: 100,
+                    lineColor: const Color(0xFF00598B).withOpacity(0.5)),
               ),
             ),
           ),
           ListView.builder(
-            padding: const EdgeInsets.only(top: 110, bottom: 60), // Adjusted for larger section header
+            padding: const EdgeInsets.only(top: 110, bottom: 60),
             controller: _scrollController,
             itemCount: allLevels.length,
             itemBuilder: (context, index) {
               final level = allLevels[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     GestureDetector(
                       onTap: () {
                         if (level.lessonType == "TextSelection") {
-                          Navigator.pushNamed(context, '/textSelection');
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => TextSelectionLesson(
+                                      lessonNumber: level.lessonNumber)));
                         } else if (level.lessonType == "AudioRecognition") {
-                          Navigator.pushNamed(context, '/audioRecognition');
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const AudioRecognitionLesson()));
                         } else {
                           Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const DummyStartPage()),
-                          );
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const DummyStartPage()));
                         }
                       },
                       child: Container(
                         width: circleRadius * 2,
                         height: circleRadius * 2,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF00598B),
-                          shape: BoxShape.circle,
-                        ),
+                            color: Color(0xFF00598B), shape: BoxShape.circle),
                         alignment: Alignment.center,
                         child: Icon(level.icon, color: Colors.white, size: 32),
                       ),
@@ -255,40 +256,33 @@ class _RoadmapPageState extends State<RoadmapPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(8), // Reduced padding
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color:  Colors.white ,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              blurRadius: 3,
-                              offset: const Offset(0, 2),
-                            ),
+                                color: Colors.grey.withOpacity(0.1),
+                                blurRadius: 3,
+                                offset: const Offset(0, 2))
                           ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              level.title,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF00598B),
-                                fontFamily: 'Roboto',
-                              ),
-                            ),
-                            Text(
-                              level.description,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF00598B),
-                                fontFamily: 'Roboto',
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            Text(level.title,
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF00598B),
+                                    fontFamily: 'Roboto')),
+                            Text(level.description,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF00598B),
+                                    fontFamily: 'Roboto'),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis),
                           ],
                         ),
                       ),
@@ -304,18 +298,16 @@ class _RoadmapPageState extends State<RoadmapPage> {
             right: 16,
             child: Container(
               margin: const EdgeInsets.only(top: 10),
-              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20), // Reduced padding
+              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
               decoration: BoxDecoration(
-                  color:Color(0xFFC7E8FF),
-                   // White background
-                border: Border.all(color: const Color(0xFF00598B), width: 2), // Border with #00598B
+                color: Color(0xFFC7E8FF),
+                border: Border.all(color: const Color(0xFF00598B), width: 2),
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
+                      color: Colors.grey.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2))
                 ],
               ),
               child: Row(
@@ -324,40 +316,35 @@ class _RoadmapPageState extends State<RoadmapPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Section $_currentSection",
-                          style: const TextStyle(
-                            fontSize: 18, // Slightly reduced font size
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF00598B),
-                            fontFamily: 'Roboto',
-                          ),
-                        ),
+                        Text("Section $_currentSection",
+                            style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF00598B),
+                                fontFamily: 'Roboto')),
                         const SizedBox(height: 6),
                         Text(
-                          sectionDescriptions[_currentSection] ?? "Keep Exploring",
-                          style: const TextStyle(
-                            fontSize: 14, // Slightly reduced font size
-                            color: Color(0xFF00598B),
-                            fontFamily: 'Roboto',
-                          ),
-                        ),
+                            sectionDescriptions[_currentSection] ??
+                                "Keep Exploring",
+                            style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF00598B),
+                                fontFamily: 'Roboto')),
                       ],
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const GuidancePage()),
-                    ),
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const GuidancePage())),
                     child: Container(
-                      padding: const EdgeInsets.all(8), // Slightly larger padding
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00598B).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                          color: const Color(0xFF00598B).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10)),
                       child: const Icon(Icons.menu_book_rounded,
-                          color: Color(0xFF00598B), size: 28), // Slightly larger icon
+                          color: Color(0xFF00598B), size: 28),
                     ),
                   ),
                 ],
@@ -368,15 +355,9 @@ class _RoadmapPageState extends State<RoadmapPage> {
             bottom: 20,
             right: 20,
             child: GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => SpeakNinjaScreen()),
-              ),
-              child: Image.asset(
-                'assets/bot.png',
-                width: 56,
-                height: 56,
-              ),
+              onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => SpeakNinjaScreen())),
+              child: Image.asset('assets/bot.png', width: 56, height: 56),
             ),
           ),
         ],
@@ -384,7 +365,6 @@ class _RoadmapPageState extends State<RoadmapPage> {
     );
   }
 }
-
 
 class _GlobalLinePainter extends CustomPainter {
   final double circleRadius;
@@ -403,13 +383,11 @@ class _GlobalLinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = lineColor
-      ..strokeWidth =  5;
-
-    final double x = size.width * 0.001 ;
+      ..strokeWidth = 5;
+    final double x = size.width * 0.001;
     final double startY = 140;
     final double endY = (itemCount - 1) * itemHeight + circleRadius;
     final double clampedEndY = endY.clamp(0.0, size.height);
-
     canvas.drawLine(Offset(x, startY), Offset(x, clampedEndY), paint);
   }
 
@@ -421,28 +399,23 @@ class DummyStartPage extends StatelessWidget {
   const DummyStartPage({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text(
-        "Level Started",
-        style: TextStyle(color: Colors.white, fontFamily: 'Roboto'),
-      ),
-      backgroundColor: const Color(0xFF00598B),
-    ),
-    body: const Center(child: Text("This is the level content page.")),
-  );
+        appBar: AppBar(
+            title: const Text("Level Started",
+                style: TextStyle(color: Colors.white, fontFamily: 'Roboto')),
+            backgroundColor: const Color(0xFF00598B)),
+        body: const Center(child: Text("This is the level content page.")),
+      );
 }
 
 class GuidancePage extends StatelessWidget {
   const GuidancePage({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text(
-        "Guidance",
-        style: TextStyle(color: Colors.white, fontFamily: 'Roboto'),
-      ),
-      backgroundColor: const Color(0xFF00598B),
-    ),
-    body: const Center(child: Text("This is the guidance page with resources.")),
-  );
+        appBar: AppBar(
+            title: const Text("Guidance",
+                style: TextStyle(color: Colors.white, fontFamily: 'Roboto')),
+            backgroundColor: const Color(0xFF00598B)),
+        body: const Center(
+            child: Text("This is the guidance page with resources.")),
+      );
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-
+import 'age_selection_screen.dart';
 import 'login.dart';
 import 'profile_screen.dart';
 import 'components/age_selection.dart';
@@ -16,11 +16,8 @@ class _UsernameScreenState extends State<UsernameScreen> {
 
   void _goToNextScreen() async {
     if (_nameController.text.isNotEmpty) {
-      // Before proceeding, update the user's name in the Firebase Realtime Database.
-      // Make sure the user is authenticated; this example assumes the user is already logged in.
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Create or update the user's node with the name.
         DatabaseReference userRef =
         FirebaseDatabase.instance.ref("users/${user.uid}");
         await userRef.update({
@@ -30,7 +27,6 @@ class _UsernameScreenState extends State<UsernameScreen> {
         });
       }
 
-      // Navigate to the AgeSelectionScreen and pass the entered name.
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -47,154 +43,111 @@ class _UsernameScreenState extends State<UsernameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFFFAF7),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFFE07C32), size: 40),
-          onPressed: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => LoginScreen()),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 200),
-            Text("So nice to meet you.",
-                style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.normal,
-                    color: Color(0xFFE07C32))),
-            Text("What's your name?",
-                style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFE07C32))),
-            SizedBox(height: 20),
-            TextField(
-              controller: _nameController,
-              style: TextStyle(fontSize: 20),
-              decoration: InputDecoration(
-                hintText: "Enter your name",
-                border: InputBorder.none,
-                enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFf49549), width: 3)),
-                focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFf49549), width: 3)),
-                contentPadding:
-                EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-            SizedBox(height: 50),
-            Center(
-              child: ElevatedButton(
-                onPressed: _goToNextScreen,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFf49549),
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                ),
-                child: Text("Next",
-                    style: TextStyle(color: Colors.white, fontSize: 18)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class AgeSelectionScreen extends StatefulWidget {
-  final String name;
-
-  AgeSelectionScreen({required this.name});
-
-  @override
-  _AgeSelectionScreenState createState() => _AgeSelectionScreenState();
-}
-
-class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
-  final List<String> ages = [
-    "Under 12",
-    "12 - 15",
-    "16 - 24",
-    "25 - 34",
-    "35 - 44",
-    "45 - 54",
-    "55 or older"
-  ];
-
-  void _handleAgeSelection(String age) async {
-    // Update the user's record with the selected age.
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      DatabaseReference userRef =
-      FirebaseDatabase.instance.ref("users/${user.uid}");
-      await userRef.update({
-        'age': age,
-      }).catchError((error) {
-        print("Error updating age: $error");
-      });
-    } else {
-      print("No authenticated user found; cannot update age.");
-    }
-
-    // Navigate to the next screen (ProfilePictureScreen, for example)
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProfilePictureScreen(),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFFFFFAF7),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFFE07C32), size: 40),
-          onPressed: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => UsernameScreen()),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.white,
+      body: Stack(
         children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Image.asset(
+              'assets/wave2.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Transform.rotate(
+              angle: 3.1416,
+              child: Image.asset(
+                'assets/wave2.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8.0, top: 8.0),
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, color: Color(0xFF00598B), size: 28),
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                ),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Hi ${widget.name}!",
+                SizedBox(height: 200),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "So nice to meet you.",
                     style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFFE07C32))),
-                Text("How old are you?",
+                      fontSize: 20,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "What's your name ?",
                     style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFE07C32))),
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF00598B),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 30),
+                TextField(
+                  controller: _nameController,
+                  cursorColor: Color(0xFF00598B),
+                  style: TextStyle(fontSize: 18),
+                  decoration: InputDecoration(
+                    hintText: "Enter your name (In English)",
+                    hintStyle: TextStyle(color: Colors.grey[600]),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide:
+                      BorderSide(color: Color(0xFF00598B), width: 2),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide:
+                      BorderSide(color: Color(0xFF00598B), width: 2),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+                SizedBox(height: 40),
+                ElevatedButton(
+                  onPressed: _goToNextScreen,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF00598B),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                  ),
+                  child: Text(
+                    "Next",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          SizedBox(height: 40),
-          AgeSelection(ages: ages, onAgeSelected: _handleAgeSelection),
         ],
       ),
     );

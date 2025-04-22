@@ -71,9 +71,20 @@ flutter:
     - assets/avatar2.png
     - assets/avatar3.png
     - assets/avatar4.png
+    - assets/avatar5.png
+    - assets/avatar6.png
+    - assets/avatar7.png
+    - assets/avatar8.png
+    - assets/avatar9.png
+    - assets/avatar10.png
+    - assets/avatar11.png
+    - assets/avatar12.png
     - assets/trophy.png
     - assets/wave.png
     - assets/bot.png
+    - assets/wave2.png
+    - assets/sun.png
+    - assets/moon.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

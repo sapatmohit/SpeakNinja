@@ -5,9 +5,13 @@ import 'login.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'mistralService.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final mistralService = MistralService();
+  await mistralService.saveApiKey("CoagecxPD3jLlYyOFT8qTN3KKbB9jOio");
   await Firebase.initializeApp();
 
   // Retrieve login state from SharedPreferences
@@ -21,11 +25,20 @@ class MyApp extends StatelessWidget {
   final bool isLoggedIn;
   final DatabaseReference dbRef = FirebaseDatabase.instance.ref("test_data");
 
-  MyApp({required this.isLoggedIn});
+  MyApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en', 'US'), // English
+        const Locale('hi', 'IN'), // Hindi
+      ],
       title: 'SpeakNinja',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -36,7 +49,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
 
 //
 // import 'package:flutter/material.dart';

@@ -1,10 +1,14 @@
+// ui/lessons/sentence_builder_lesson.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:flutter_chat_bubble/clippers/chat_bubble_clipper_1.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import '../../services/mistral_service.dart';
+import '../../models/level_data.dart';
 
 class SentenceBuilderLessonPage extends StatefulWidget {
-  const SentenceBuilderLessonPage({super.key});
+  final int lessonNumber;
+  const SentenceBuilderLessonPage({super.key, this.lessonNumber = 1});
 
   @override
   State<SentenceBuilderLessonPage> createState() =>
@@ -12,222 +16,283 @@ class SentenceBuilderLessonPage extends StatefulWidget {
 }
 
 class _SentenceBuilderLessonPageState extends State<SentenceBuilderLessonPage> {
+  final MistralService _service = MistralService();
+  final FlutterTts _tts = FlutterTts();
   List<String> selectedWords = [];
-  final correctSentence = ["Hello", "how", "are", "you"];
-  List<String> wordOptions = ["Hello", "how", "are", "you", "good", "bye"];
-  bool isCorrect = false;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  LevelData _levelData = LevelData();
+  bool _isLoading = true;
+  String? _error;
+  double _progress = 0.4;
+  final int _attemptCount = 0;
 
-  void _playAudio() async {
-    const audioUrl =
-        'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-    await _audioPlayer.play(UrlSource(audioUrl));
+  @override
+  void initState() {
+    super.initState();
+    _loadLesson();
+    _tts.setCompletionHandler(() => _tts.stop());
   }
 
-  void _showFeedback(String message, Color color) {
+  @override
+  void dispose() {
+    _tts.stop();
+    super.dispose();
+  }
+
+  Future<void> _loadLesson() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await _service.fetchLessonData('''
+        Generate a $_difficultyLevel English sentence-building exercise with:
+        - Correct sentence: 4-6 words, $_tenseType
+        - 8-10 word options including distractors
+        - Phonetically distinct words
+        - Lesson ${widget.lessonNumber}
+      ''');
+
+      _validateLessonData(data);
+
+      setState(() {
+        _levelData = LevelData.fromJson(data);
+        _levelData.wordOptions.shuffle();
+        _isLoading = false;
+        _progress += 0.2;
+      });
+    } catch (e) {
+      setState(() => _error = 'Failed to load: ${e.toString()}');
+    }
+  }
+
+  void _validateLessonData(Map<String, dynamic> data) {
+    final correct = List<String>.from(data['correct_sentence']);
+    final options = List<String>.from(data['word_options']);
+
+    if (correct.any((word) => !options.contains(word))) {
+      throw Exception('Missing correct words in options');
+    }
+
+    if (options.toSet().length != options.length) {
+      throw Exception('Duplicate words in options');
+    }
+  }
+
+  String get _difficultyLevel =>
+      widget.lessonNumber > 3 ? 'intermediate' : 'beginner';
+  String get _tenseType =>
+      widget.lessonNumber > 2 ? 'past/present tense' : 'present tense';
+
+  void _handleWordTap(String word) {
+    setState(() => selectedWords.contains(word)
+        ? selectedWords.remove(word)
+        : selectedWords.add(word));
+  }
+
+  void _validateAnswer() {
+    final correct =
+        _levelData.correctSentence.join(' ') == selectedWords.join(' ');
+    _showResult(correct);
+    if (correct) _progress += 0.2;
+  }
+
+  void _showResult(bool isCorrect) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        margin: const EdgeInsets.all(20),
+        content: Text(isCorrect ? 'Perfect! 🎉' : 'Try again! 💪'),
+        backgroundColor: isCorrect ? Colors.green : Colors.orange,
         duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  void _addWordToSentence(String word) {
-    setState(() {
-      if (!selectedWords.contains(word)) {
-        selectedWords.add(word);
-      }
-    });
-  }
-
-  void _removeWordFromSentence(String word) {
-    setState(() {
-      selectedWords.remove(word);
-    });
-  }
-
-  void _checkAnswer() {
-    if (selectedWords.length == correctSentence.length &&
-        selectedWords
-            .asMap()
-            .entries
-            .every((entry) => entry.value == correctSentence[entry.key])) {
-      setState(() => isCorrect = true);
-      _showFeedback("Correct! Well done.", Colors.green.withOpacity(0.7));
-    } else {
-      setState(() => isCorrect = false);
-      _showFeedback("Oops! Try again.", Colors.red.withOpacity(0.7));
+  Future<void> _playSentence() async {
+    try {
+      await _tts.speak(_levelData.correctSentence.join(' '));
+    } catch (e) {
+      _showResult(false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(90),
-        child: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.close, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
+      appBar: AppBar(
+        title: LinearProgressIndicator(
+          value: _progress.clamp(0.0, 1.0),
+          backgroundColor: Colors.grey[200],
+          valueColor: const AlwaysStoppedAnimation(Colors.blue),
+        ),
+        actions: [
+          IconButton(onPressed: _loadLesson, icon: const Icon(Icons.refresh))
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? _ErrorWidget(error: _error!, onRetry: _loadLesson)
+              : Column(
+                  children: [
+                    _PronunciationHeader(onTap: _playSentence),
+                    _SentenceBuilderArea(
+                      selectedWords: selectedWords,
+                      onWordTap: _handleWordTap,
+                    ),
+                    _WordOptionsGrid(
+                      options: _levelData.wordOptions,
+                      selected: selectedWords,
+                      onTap: _handleWordTap,
+                    ),
+                    _ValidationButton(
+                      isActive: selectedWords.isNotEmpty,
+                      onPressed: _validateAnswer,
+                    ),
+                  ],
+                ),
+    );
+  }
+}
+
+class _PronunciationHeader extends StatelessWidget {
+  final VoidCallback onTap;
+  const _PronunciationHeader({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            shape: BoxShape.circle,
           ),
-          title: Padding(
-            padding: const EdgeInsets.only(top: 24),
-            child: LinearProgressIndicator(
-              value: 0.4,
-              minHeight: 10,
-              borderRadius: BorderRadius.circular(10),
-              backgroundColor: const Color(0xFFC7E8FF),
-              valueColor: const AlwaysStoppedAnimation(Color(0xFF00598B)),
-            ),
-          ),
-          centerTitle: true,
+          child:
+              const Icon(Icons.volume_up, size: 50, color: Colors.blueAccent),
         ),
       ),
-      body: Stack(
-        children: [
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Image.asset(
-              'assets/wave.png',
-              width: MediaQuery.of(context).size.width,
-              fit: BoxFit.fitWidth,
-            ),
+    );
+  }
+}
+
+class _SentenceBuilderArea extends StatelessWidget {
+  final List<String> selectedWords;
+  final Function(String) onWordTap;
+
+  const _SentenceBuilderArea({
+    required this.selectedWords,
+    required this.onWordTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ChatBubble(
+      clipper: ChatBubbleClipper1(type: BubbleType.receiverBubble),
+      backGroundColor: Colors.blue[100]!,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 100),
+        padding: const EdgeInsets.all(15),
+        child: Wrap(
+          spacing: 10,
+          children: selectedWords
+              .map<Widget>((word) => InputChip(
+                    label: Text(word),
+                    onDeleted: () => onWordTap(word),
+                    deleteIcon: const Icon(Icons.cancel),
+                    backgroundColor: Colors.blue[200],
+                  ))
+              .toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _WordOptionsGrid extends StatelessWidget {
+  final List<String> options;
+  final List<String> selected;
+  final Function(String) onTap;
+
+  const _WordOptionsGrid({
+    required this.options,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GridView.builder(
+        padding: const EdgeInsets.all(20),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          childAspectRatio: 2.0,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+        ),
+        itemCount: options.length,
+        itemBuilder: (context, index) => ElevatedButton(
+          onPressed: () => onTap(options[index]),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: selected.contains(options[index])
+                ? Colors.blue[300]
+                : Colors.blue[100],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                /// 👂 "Select what you hear" Text
-                const Text(
-                  "Select what you hear",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
+          child: Text(
+            options[index],
+            style: const TextStyle(fontSize: 16),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-                const SizedBox(height: 20),
+class _ValidationButton extends StatelessWidget {
+  final bool isActive;
+  final VoidCallback onPressed;
 
-                /// Speaker Icon Button
-                GestureDetector(
-                  onTap: _playAudio,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.lightBlue[100],
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.volume_up_rounded,
-                      color: Colors.indigo[800],
-                      size: 88,
-                    ),
-                  ),
-                ),
+  const _ValidationButton({
+    required this.isActive,
+    required this.onPressed,
+  });
 
-                const SizedBox(height: 40),
-                ChatBubble(
-                  clipper: ChatBubbleClipper1(type: BubbleType.receiverBubble),
-                  alignment: Alignment.topLeft,
-                  backGroundColor: Colors.lightBlue[100]!,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 20, horizontal: 30),
-                    child: Wrap(
-                      spacing: 8,
-                      children: selectedWords.isEmpty
-                          ? [
-                              const Text(
-                                "Tap words to build the sentence",
-                                style: TextStyle(
-                                  color: Colors.blueGrey,
-                                  fontSize: 20,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              )
-                            ]
-                          : selectedWords.map((word) {
-                              return GestureDetector(
-                                onTap: () => _removeWordFromSentence(word),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue[200],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    word,
-                                    style: TextStyle(
-                                      color: Colors.blue[900],
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-                Wrap(
-                  spacing: 20,
-                  runSpacing: 20,
-                  alignment: WrapAlignment.center,
-                  children: wordOptions.map((word) {
-                    return ElevatedButton(
-                      onPressed: selectedWords.contains(word)
-                          ? null
-                          : () => _addWordToSentence(word),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[100],
-                        fixedSize: const Size(120, 60),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(
-                        word,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 40),
-                ElevatedButton(
-                  onPressed: selectedWords.isEmpty ? null : _checkAnswer,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: const Text(
-                    "Submit",
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: ElevatedButton.icon(
+        icon: const Icon(Icons.check_circle),
+        label: const Text('Check Answer'),
+        onPressed: isActive ? onPressed : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blueAccent,
+          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorWidget extends StatelessWidget {
+  final String error;
+  final VoidCallback onRetry;
+
+  const _ErrorWidget({
+    required this.error,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(error, style: const TextStyle(color: Colors.red)),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: onRetry,
+            child: const Text('Try Again'),
           ),
         ],
       ),

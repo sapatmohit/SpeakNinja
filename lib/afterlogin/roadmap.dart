@@ -8,6 +8,7 @@ import 'profile_page.dart';
 import 'text_selection.dart';
 import 'audio_text_combined.dart';
 import 'audio_recognition.dart';
+import 'SentenceBuilder.dart'; // Import SentenceBuilderLessonPage
 
 void main() => runApp(const MyApp());
 
@@ -94,26 +95,32 @@ class _RoadmapPageState extends State<RoadmapPage> {
     allLevels = List.generate(100, (i) {
       final number = i + 1;
       if (i < 5) {
-        // Ensure TextSelection is always included
-        final lessonType = i % 3 == 0
+        // Ensure TextSelection, AudioRecognition, CombinedLesson, and SentenceBuilder are included
+        final lessonType = i % 4 == 0
             ? "TextSelection"
-            : i % 3 == 1
+            : i % 4 == 1
                 ? "AudioRecognition"
-                : "CombinedLesson";
+                : i % 4 == 2
+                    ? "CombinedLesson"
+                    : "SentenceBuilder";
 
         return LevelItem(
           title:
-              "Lesson $number: ${lessonType == 'TextSelection' ? 'Text Selection' : lessonType == 'AudioRecognition' ? 'Audio Recognition' : 'Combined Lesson'} - Word $number",
+              "Lesson $number: ${lessonType == 'TextSelection' ? 'Text Selection' : lessonType == 'AudioRecognition' ? 'Audio Recognition' : lessonType == 'CombinedLesson' ? 'Combined Lesson' : 'Sentence Builder'} - Word $number",
           description: lessonType == "TextSelection"
               ? "Complete 3 unique translation questions"
               : lessonType == "AudioRecognition"
                   ? "Identify the meaning from audio"
-                  : "Practice both text and audio recognition",
+                  : lessonType == "CombinedLesson"
+                      ? "Practice both text and audio recognition"
+                      : "Build sentences using word options",
           icon: lessonType == "TextSelection"
               ? textIcons[0]
               : lessonType == "AudioRecognition"
                   ? audioIcons[Random().nextInt(audioIcons.length)]
-                  : Icons.merge_type, // Icon for CombinedLesson
+                  : lessonType == "CombinedLesson"
+                      ? Icons.merge_type
+                      : Icons.text_fields, // Icon for SentenceBuilder
           lessonType: lessonType,
           lessonNumber: number,
         );
@@ -256,6 +263,12 @@ class _RoadmapPageState extends State<RoadmapPage> {
                               context,
                               MaterialPageRoute(
                                   builder: (_) => const CombinedLessonPage()));
+                        } else if (level.lessonType == "SentenceBuilder") {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const SentenceBuilderLessonPage()));
                         } else {
                           Navigator.push(
                               context,

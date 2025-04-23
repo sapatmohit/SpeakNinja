@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart'; // Import FlutterTts
 import '../mistral_service.dart';
 
 class AudioRecognitionLesson extends StatefulWidget {
@@ -50,6 +51,7 @@ class _AudioRecognitionLessonState extends State<AudioRecognitionLesson>
   final Set<String> _usedTargetWords = {};
   late AnimationController _progressController;
   late Animation<double> _progressAnimation;
+  final FlutterTts _flutterTts = FlutterTts(); // Add FlutterTts instance
 
   @override
   void initState() {
@@ -66,6 +68,7 @@ class _AudioRecognitionLessonState extends State<AudioRecognitionLesson>
   @override
   void dispose() {
     _progressController.dispose();
+    _flutterTts.stop(); // Stop TTS when disposing
     super.dispose();
   }
 
@@ -113,6 +116,16 @@ class _AudioRecognitionLessonState extends State<AudioRecognitionLesson>
         errorMessage = e.toString();
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _playAudio(String text) async {
+    try {
+      await _flutterTts.setLanguage("en-US"); // Set language
+      await _flutterTts.setPitch(1.0); // Set pitch
+      await _flutterTts.speak(text); // Speak the text
+    } catch (e) {
+      _showFeedback("Failed to play audio", Colors.red, false);
     }
   }
 
@@ -215,8 +228,16 @@ class _AudioRecognitionLessonState extends State<AudioRecognitionLesson>
                       ),
                       const SizedBox(height: 30),
                       Center(
-                        child: Icon(Icons.volume_up_rounded,
-                            size: 124, color: Colors.blue[700]),
+                        child: GestureDetector(
+                          onTap: () {
+                            if (levelData != null) {
+                              _playAudio(levelData!
+                                  .targetWord); // Play the question audio
+                            }
+                          },
+                          child: Icon(Icons.volume_up_rounded,
+                              size: 124, color: Colors.blue[700]),
+                        ),
                       ),
                       const SizedBox(height: 30),
                       ...levelData!.options.map((option) => Padding(

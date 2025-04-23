@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:flutter_chat_bubble/clippers/chat_bubble_clipper_1.dart';
-import '../services/mistralService.dart';
+import 'package:flutter_tts/flutter_tts.dart'; // Import FlutterTts
+import '../services/mistral_service.dart';
 import '../models/level_data.dart';
 
 class CombinedLessonPage extends StatefulWidget {
@@ -24,6 +25,7 @@ class _CombinedLessonPageState extends State<CombinedLessonPage>
   final Set<String> _usedTargetWords = {};
   late AnimationController _progressController;
   late Animation<double> _progressAnimation;
+  final FlutterTts _flutterTts = FlutterTts(); // Add FlutterTts instance
 
   @override
   void initState() {
@@ -39,6 +41,7 @@ class _CombinedLessonPageState extends State<CombinedLessonPage>
 
   @override
   void dispose() {
+    _flutterTts.stop(); // Stop TTS when disposing
     _progressController.dispose();
     super.dispose();
   }
@@ -175,8 +178,20 @@ class _CombinedLessonPageState extends State<CombinedLessonPage>
     }
   }
 
+  Future<void> _playAudio(String text) async {
+    try {
+      await _flutterTts.setLanguage("en-US"); // Set language
+      await _flutterTts.setPitch(1.0); // Set pitch
+      await _flutterTts.speak(text); // Speak the text
+    } catch (e) {
+      _showFeedback("Failed to play audio", Colors.red);
+    }
+  }
+
   void _onVolumeIconClick() {
-    _showFeedback("Playing pronunciation", Colors.blueAccent.withOpacity(0.7));
+    if (levelData != null) {
+      _playAudio(levelData!.targetWord); // Play the target word audio
+    }
   }
 
   @override
@@ -276,7 +291,8 @@ class _CombinedLessonPageState extends State<CombinedLessonPage>
                       IconButton(
                         icon: Icon(Icons.volume_up_rounded,
                             size: 90, color: Colors.blue[700]),
-                        onPressed: _onVolumeIconClick,
+                        onPressed:
+                            _onVolumeIconClick, // Updated to use _onVolumeIconClick
                       ),
                     ],
                   ),

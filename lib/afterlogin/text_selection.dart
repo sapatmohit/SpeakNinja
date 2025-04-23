@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:flutter_chat_bubble/clippers/chat_bubble_clipper_1.dart';
-import '../mistralService.dart';
+import '../mistral_service.dart';
 
 class TextSelectionLesson extends StatefulWidget {
   final int lessonNumber;

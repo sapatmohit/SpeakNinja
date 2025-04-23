@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../mistralService.dart';
+import '../mistral_service.dart';
 
 class AudioRecognitionLesson extends StatefulWidget {
   final int lessonNumber;

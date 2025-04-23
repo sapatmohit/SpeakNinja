@@ -46,13 +46,20 @@ class _TextSelectionLessonState extends State<TextSelectionLesson>
     setState(() => isLoading = true);
     try {
       final mistralService = MistralService();
-      final prompt = "Generate an English-to-Hindi translation question. "
-          "Respond with a JSON object containing exactly these keys: "
-          "target_word (an English word), "
-          "options (an array of 4 Hindi words), "
-          "correct_answer (the correct Hindi translation). "
-          "Avoid these words: ${_usedTargetWords.join(', ')}. "
-          "Lesson ${widget.lessonNumber}, Question ${questionCount + 1}";
+      final isEnglishToHindi = questionCount % 2 == 0;
+      final prompt = isEnglishToHindi
+          ? "Generate an English-to-Hindi translation question. "
+              "Respond with a JSON object containing exactly these keys: "
+              "target_word (an English word), "
+              "options (an array of 4 Hindi words), "
+              "correct_answer (the correct Hindi translation). "
+          : "Generate a Hindi-to-English translation question. "
+              "Respond with a JSON object containing exactly these keys: "
+              "target_word (a Hindi word), "
+              "options (an array of 4 English words), "
+              "correct_answer (the correct English translation). "
+              "Avoid these words: ${_usedTargetWords.join(', ')}. "
+              "Lesson ${widget.lessonNumber}, Question ${questionCount + 1}";
       Map<String, dynamic>? data;
       int attempt = 0;
       const maxAttempts = 3;
@@ -105,7 +112,7 @@ class _TextSelectionLessonState extends State<TextSelectionLesson>
   }
 
   void _handleNextQuestion() {
-    if (questionCount >= 2) {
+    if (questionCount >= 4) {
       Navigator.pop(context);
     } else {
       setState(() {
